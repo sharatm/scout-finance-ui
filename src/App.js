@@ -16,7 +16,9 @@ function App() {
     zelleName: ""
   });
 
-  const [expenses, setExpenses] = useState([]); // store submitted expenses
+  const [expenses, setExpenses] = useState([]);
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState(""); // success | error
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -24,13 +26,18 @@ function App() {
 
   const submitExpense = async (e) => {
     e.preventDefault();
+
     try {
       const res = await axios.post(`${API_URL}/api/expenses`, form);
-      alert("Expense submitted successfully");
-      
-      // add the new expense to the state array for display
+
+      // Add new expense to table
       setExpenses((prev) => [...prev, res.data]);
 
+      // Success message
+      setMessage("Expense submitted successfully!");
+      setMessageType("success");
+
+      // Reset form
       setForm({
         fullName: "",
         eventName: "",
@@ -43,14 +50,37 @@ function App() {
         zelleName: ""
       });
     } catch (err) {
-      alert("Failed to submit expense");
       console.error(err);
+      setMessage("Failed to submit expense");
+      setMessageType("error");
     }
+
+    // Auto-hide message after 3 seconds
+    setTimeout(() => {
+      setMessage("");
+      setMessageType("");
+    }, 3000);
   };
 
   return (
     <div style={{ padding: "30px", maxWidth: "800px", margin: "auto" }}>
       <h2>Troop 2605 – Expense Submission</h2>
+
+      {/* Message */}
+      {message && (
+        <div
+          style={{
+            marginBottom: "15px",
+            padding: "10px",
+            color: messageType === "success" ? "#155724" : "#721c24",
+            backgroundColor: messageType === "success" ? "#d4edda" : "#f8d7da",
+            border: "1px solid",
+            borderColor: messageType === "success" ? "#c3e6cb" : "#f5c6cb"
+          }}
+        >
+          {message}
+        </div>
+      )}
 
       <form onSubmit={submitExpense} style={{ marginBottom: "30px" }}>
         {[
@@ -78,7 +108,9 @@ function App() {
           </div>
         ))}
 
-        <button type="submit" style={{ padding: "10px 20px" }}>Submit Expense</button>
+        <button type="submit" style={{ padding: "10px 20px" }}>
+          Submit Expense
+        </button>
       </form>
 
       <h3>Submitted Expenses</h3>
@@ -97,7 +129,7 @@ function App() {
             {expenses.map((exp, index) => (
               <tr key={index}>
                 {Object.keys(exp).map((key) => (
-                  <td key={key}>{exp[key] || "-"}</td>
+                  <td key={key}>{exp[key] ?? "-"}</td>
                 ))}
               </tr>
             ))}
